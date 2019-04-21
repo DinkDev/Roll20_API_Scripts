@@ -467,6 +467,7 @@ var CreatureGenPF = (function() {
 				AC = AC.get('current');
 				token.set('bar1_value',hp);
 				token.set('bar1_max', hp);
+				token.set('showplayers_bar1', true);	// added display of HP
 				token.set('bar3_value',AC);
 				token.set('name',name);
 				token.set('showname',true);
@@ -482,6 +483,7 @@ var CreatureGenPF = (function() {
 					AC = AC.get('current');
 					token.set('bar1_value',hp);
 					token.set('bar1_max', hp);
+					token.set('showplayers_bar1', true);	// added display of HP
 					token.set('bar3_value',AC);
 					token.set('name',name);
 					token.set('showname',true);
