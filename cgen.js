@@ -46,7 +46,7 @@
 
 var CreatureGenPF = (function() {
 	'use strict'; 
-	var version = 1.32,
+	var version = 1.33,
 		author = "Ken L.",
 		contributers = "Andy W., Shu Zong C., Carlos R. L. Rodrigues",
 		debugLvl = 1,
