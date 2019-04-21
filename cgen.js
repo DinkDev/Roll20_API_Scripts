@@ -318,8 +318,10 @@ var CreatureGenPF = (function() {
 	 */
 	var fixNewObject = function(obj) {
 		var p = obj.changed._fbpath;
-		var new_p = p.replace(/([^\/]*\/){4}/, "/");
-		obj.fbpath = new_p;
+		if(p !== undefined) {
+		    var new_p = p.replace(/([^\/]*\/){4}/, "/");
+		    obj.fbpath = new_p;
+		}
 		return obj;
 	}; 
 	
@@ -3441,4 +3443,3 @@ on("ready", function() {
 	CreatureGenPF.init();
 	CreatureGenPF.registerAPI();
 });
-
