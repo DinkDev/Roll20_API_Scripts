@@ -49,7 +49,7 @@ var CreatureGenPF = (function() {
   var version = 1.33,
     author = "Ken L.",
     contributers = "Andy W., Shu Zong C., Carlos R. L. Rodrigues",
-    debugLvl = 1,
+    debugLvl = '1',
     locked = false,
     unitPixels = 70,
     workStart = 0,
@@ -326,7 +326,7 @@ var CreatureGenPF = (function() {
    * sets design to that template and
    * sets state.cgen_design to the template name
    * @param {string} name lowercase name of template to find
-   * @param {boolean} quiet controls if output messages are displayed
+   * @param {boolean} [quiet] controls if output messages are displayed
    * @returns {boolean} true if template is found
    */
   var selectDesignTemplate = function(name, quiet) {
@@ -372,7 +372,7 @@ var CreatureGenPF = (function() {
    * sets fields.tmpAtk to that template and
    * sets state.cgen_attack to the template name
    * @param {string} name lowercase name of template to find
-   * @param {boolean} quiet controls if output messages are displayed
+   * @param {boolean} [quiet] controls if output messages are displayed
    * @returns {boolean} true if template is found
    */
   var selectAttackTemplate = function(name, quiet) {
@@ -560,10 +560,10 @@ var CreatureGenPF = (function() {
 
   /**
    * prepToken - preps the token - Asynchronous
-   * @param {token} token - the token
-   * @param {character} character - the character sheet
+   * @param {{ get: { (arg0: string): any; (arg0: string, arg1: (notes: string) => void): void; }; }} character  - the character sheet
+   * @param {{ get: (arg0: string) => string; set: { (arg0: string, arg1: any): void; (arg0: string, arg1: boolean): void;}; }} token - the token to prep
    */
-  var prepToken = function(token, character) {
+   var prepToken = function(token, character) {
     if (!token || !character) {
       return;
     }
@@ -624,8 +624,8 @@ var CreatureGenPF = (function() {
 
   /**
    * resizeToken - resizes the token from the character's size sttribute
-   * @param {token} token - the token to resize
-   * @param {character} character - the character sheet to get the size parameter from
+   * @param {{ get: (arg0: string) => string; set: { (arg0: string, arg1: any): void; (arg0: string, arg1: boolean): void;}; }} token - the token to prep
+   * @param {{ get: { (arg0: string): any; (arg0: string, arg1: (notes: string) => void): void; }; }} character - the character sheet to get the size parameter from
    */
   var resizeToken = function(token, character) {
     var charId = character.get("_id");
@@ -633,7 +633,7 @@ var CreatureGenPF = (function() {
     var pageScale = getObj("page", token.get("_pageid")).get(
       "snapping_increment"
     );
-    var tsize = parseInt(unitPixels * (pageScale === 0 ? 1 : pageScale));
+    var tsize = Math.round(unitPixels * (pageScale === 0 ? 1 : pageScale));
     var size = getAttribute("Size", charId);
     if (!size) {
       return;
@@ -681,9 +681,7 @@ var CreatureGenPF = (function() {
     }
     var name = namefield.substring(0, delimiter_idx);
     name = name.trim().toLowerCase();
-    creName = fields.summoner
-      ? fields.summoner.get("_displayname") + "'s " + name
-      : name;
+    creName = fields.summoner ? fields.summoner.get("_displayname") + "'s " + name : name;
     fields.publicName = fields.summoner ? creName : fields.publicName;
   };
 
@@ -788,12 +786,12 @@ var CreatureGenPF = (function() {
     if (space) {
       space = getValueByName("Space", space, [";", ","]);
       space = getBonusNumber(space, bonusEnum.SCALAR);
-      space = parseInt(space);
-      if (isNaN(space)) {
+      var spaceNum = parseInt(space);
+      if (isNaN(spaceNum)) {
         return;
       }
-      space = space / 5;
-      switch (space) {
+      spaceNum = spaceNum / 5;
+      switch (spaceNum) {
         case 1:
           retval = "Medium";
           break;
@@ -2201,16 +2199,10 @@ var CreatureGenPF = (function() {
         creLog("SpellFormat: casterType: " + casterType, 2);
         clAttrName = casterType + "-CL";
         addAttribute(clAttrName, casterLevel, casterLevel, charId);
-        attrStr =
-          "!\n" +
-          fields.resultWhis +
-          creName +
-          ": " +
-          clAttrName +
-          ": [[1d20+" +
-          casterLevel +
-          "]]";
+
+        attrStr = "!\n" + fields.resultWhis + creName + ": " + clAttrName + ": [[1d20+" + casterLevel + "]]";
         addAbility(clAttrName, "", attrStr, false, charId);
+
         concentration = getValueByName("concentration", line, termChars);
         concentration = getBonusNumber(concentration, bonusEnum.SIGN);
         conAttrName = casterType + "-CON";
@@ -2228,20 +2220,13 @@ var CreatureGenPF = (function() {
           menuTemplate.boundryImg({
             imgLink: design.spellBookTopImg
           }) +
-          (design.spellBookMidOvr
-            ? menuTemplate.midDivOverlay({
-                imgLink: design.spellBookMidImg,
-                imgLinkOverlay: design.spellBookMidOvr
-              })
-            : menuTemplate.midDiv({
-                imgLink: design.spellBookMidImg
-              })) +
+          (design.spellBookMidOvr ? menuTemplate.midDivOverlay({ imgLink: design.spellBookMidImg, imgLinkOverlay: design.spellBookMidOvr })
+            : menuTemplate.midDiv({ imgLink: design.spellBookMidImg })) +
           '<div style="text-align:center">' +
           menuTemplate.titleFmt({
             style: design.spellBookTitleFmt,
             title: casterType
-          }) +
-          "</div>";
+          }) + "</div>";
 
         creLog("ParseSpells: start: " + start + " line: " + line, 1);
         // mow down some lines wherever we see —, stop when we don't see it.
@@ -2256,14 +2241,7 @@ var CreatureGenPF = (function() {
             sLevel = spells[0];
             spells = spells[1].split(/,(?![^\(\)]*\))/);
             creLog("spells sl: " + sLevel + " sp: " + spells, 2);
-            addSpells(
-              casterLevel,
-              sLevel,
-              spells,
-              termType,
-              casterType,
-              charId
-            );
+            addSpells(casterLevel, sLevel, spells, termType, casterType, charId);
             abName = casterType + " " + sLevel;
             spellBook =
               spellBook +
@@ -2316,33 +2294,23 @@ var CreatureGenPF = (function() {
 
   /**
    * addSpells - add spells, be wary of greater/lesser semantics..
-   * @param {number} casterLevel - the level of the caster!
+   * @param {string} casterLevel - the level of the caster!
    * @param {string} spellLvl - the level of the caster!
    * @param {*} spellAry - the array of strings of spell info parsed
    * @param {*} termType - The type of the generic to create (termEnum)
    * @param {string} setName - the type of the caster
    * @param {number} charId - the id for the character being created
    */
-  var addSpells = function(
-    casterLevel,
-    spellLvl,
-    spellAry,
-    termType,
-    setName,
-    charId
-  ) {
+  var addSpells = function (casterLevel, spellLvl, spellAry, termType, setName, charId) {
     if (!spellLvl || !spellAry || !setName || !termType || !charId) {
       return;
     }
     var spellName, spellRiders, spellLabel, idx, abName;
     var spellList = "";
 
-    spellList =
-      "!\n" +
-      fields.menuWhis +
-      menuTemplate.boundryImg({
-        imgLink: design.spellTopImg
-      }) +
+    spellList = "!\n" + fields.menuWhis + menuTemplate.boundryImg({
+      imgLink: design.spellTopImg
+    }) +
       menuTemplate.midDiv({
         imgLink: design.spellMidImg
       }) +
@@ -2556,7 +2524,7 @@ var CreatureGenPF = (function() {
           continue;
         }
         if (alphabet.length <= 0) {
-          alphabet.unshift(++cnt); // TODO: this looks like a bug
+          alphabet.unshift((++cnt).toString()); // TODO: this looks like a bug
         }
         attacks = volley[0].split(/,(?![^\(\)]*\))/);
         atkList += addAttacks(attacks, charId, label, specials, alphabet[0]);
@@ -2660,13 +2628,9 @@ var CreatureGenPF = (function() {
             (critRange.range < 20 ? "cs>" + critRange.range : "") +
             atkIter[0] +
             "]]" +
-            (critRange.range < 20 || critRange.multi > 2
-              ? " (" +
-                ((critRange.range < 20 ? critRange.range + "-20" : "") +
-                  (critRange.multi > 2
-                    ? (critRange.range < 20 ? "/×" : "×") + critRange.multi
-                    : "") +
-                  ")")
+            (critRange.range < 20 || critRange.multi > 2 ? " (" + ((critRange.range < 20 ? critRange.range + "-20" : "") +
+              (critRange.multi > 2 ? (critRange.range < 20 ? "/×" : "×") + critRange.multi : "") +
+              ")")
               : "") +
             (!atkRiders ? "" : " [" + atkRiders[0].trim() + "]");
           abName =
@@ -2682,10 +2646,7 @@ var CreatureGenPF = (function() {
             fields.publicAnn +
             applyAtkTemp(fields.tmpAtk, atkTitle, atkStr, atkDamage.damage);
           atkStr =
-            atkStr +
-            (atkDamage.rider === ""
-              ? ""
-              : "\n" + fields.resultWhis + atkDamage.rider);
+            atkStr + (atkDamage.rider === "" ? "" : "\n" + fields.resultWhis + atkDamage.rider);
           addAbility(abName, "", atkStr, false, charId);
           atkIter.shift();
           atkList =
@@ -2700,41 +2661,26 @@ var CreatureGenPF = (function() {
       } else {
         atkTitle = fields.publicName + " attacks with " + atkName + "!";
         atkStr =
-          (atkMod !== ""
-            ? "[[1d20" +
-              (critRange.range < 20 ? "cs>" + critRange.range : "") +
-              atkMod +
-              "]]"
+          (atkMod !== "" ? "[[1d20" +
+            (critRange.range < 20 ? "cs>" + critRange.range : "") + atkMod + "]]"
             : "auto-hit") +
-          (critRange.range < 20 || critRange.multi > 2
-            ? " (" +
-              ((critRange.range < 20 ? critRange.range + "-20" : "") +
-                (critRange.multi > 2
-                  ? (critRange.range < 20 ? "/×" : "×") + critRange.multi
-                  : "") +
-                ")")
+          (critRange.range < 20 || critRange.multi > 2 ? " (" + ((critRange.range < 20 ? critRange.range + "-20" : "") +
+            (critRange.multi > 2 ? (critRange.range < 20 ? "/×" : "×") + critRange.multi : "") + ")")
             : "") +
           (!atkRiders ? "" : " [" + atkRiders[0].trim() + "]");
         abName = label + (volley ? "[" + volley + "]" : "") + "_" + atkName;
-        atkStr =
-          "!\n" +
-          fields.publicAnn +
-          applyAtkTemp(fields.tmpAtk, atkTitle, atkStr, atkDamage.damage);
-        atkStr =
-          atkStr +
-          (atkDamage.rider === ""
-            ? ""
-            : "\n" + fields.resultWhis + atkDamage.rider);
+
+        atkStr = "!\n" + fields.publicAnn + applyAtkTemp(fields.tmpAtk, atkTitle, atkStr, atkDamage.damage);
+        
+        atkStr = atkStr + (atkDamage.rider === "" ? "" : "\n" + fields.resultWhis + atkDamage.rider);
 
         addAbility(abName, "", atkStr, false, charId);
-        atkList =
-          atkList +
-          menuTemplate.midButton({
-            riders: undefined,
-            creName: creName,
-            abName: abName,
-            btnName: abName
-          });
+        atkList = atkList + menuTemplate.midButton({
+          riders: undefined,
+          creName: creName,
+          abName: abName,
+          btnName: abName
+        });
       }
       creLog(
         "addAttacks: " +
@@ -2829,21 +2775,28 @@ var CreatureGenPF = (function() {
     damage = re.exec(str);
     ploc = str.indexOf("plus");
 
+    var damageStrArr;
+
     // if flat, or rider only damage section
     if (!damage) {
       if (ploc !== -1) {
-        var damageStrArr = str.substring(0, ploc).match(/\b[\d]+\s/);
+        damageStrArr = str.substring(0, ploc).match(/\b[\d]+\s/);
         if (!damageStrArr) {
           damageStrArr = str.match(/\b[^\d\/\(\)\+×\s]+\b/);
           creLog("damageStr: " + damageStrArr, 3);
-          if (!damageStr) {
+          if (!damageStrArr) {
             // give up if things get too weird
             throw "ERROR: Bad damage format: '" + str + "'";
           }
-					str = str.substring(0, ploc + 4) + " " + damageStrArr[0].trim() + "," + str.substring(ploc + 4);
+          damageStr = damageStrArr[0];
+          str = str.substring(0, ploc + 4) + " " + damageStr.trim() + "," + str.substring(ploc + 4);
         }
-      } else if (!!(damageStrArr = str.match(/\b[^\d\/\(\)\+×\s]+\b/))) {
-        str = str + " plus " + damageStrArr[0].trim();
+      } else {
+        damageStrArr = str.match(/\b[^\d\/\(\)\+×\s]+\b/);
+        if (damageStrArr) {
+          damageStr = damageStrArr[0];
+          str = str + " plus " + damageStr.trim();
+        }
       }
       damageStr = "[[0d0]]";
     } else {
@@ -2906,20 +2859,14 @@ var CreatureGenPF = (function() {
             "<div>" +
             getTermLink(riderName, termEnum.GENERAL) +
             " " +
-            (subRiders.match(/[^\s]+/)
-              ? " " + getFormattedRoll(subRiders)
-              : "") +
+            (subRiders.match(/[^\s]+/) ? " " + getFormattedRoll(subRiders) : "") +
             "</div>";
         } else {
           riderStr +=
             "<div>" +
-            ((specials[riderName]
-              ? getFormattedRoll(getDamageRiderInfo(riderName, specials))
-              : undefined) || getTermLink(riderName, termEnum.GENERAL)) +
+            ((specials[riderName] ? getFormattedRoll(getDamageRiderInfo(riderName, specials)) : undefined) || getTermLink(riderName, termEnum.GENERAL)) +
             " " +
-            (subRiders.match(/[^\s]+/)
-              ? " " + getFormattedRoll(subRiders, termEnum.GENERAL)
-              : "") +
+            (subRiders.match(/[^\s]+/) ? " " + getFormattedRoll(subRiders) : "") +
             "</div>";
         }
         ary.shift();
@@ -3132,7 +3079,7 @@ var CreatureGenPF = (function() {
 	 * @param {string[]} data - The cleaned data from the gm notes field of the token
 	 * @param {string} line - the line to get the attributes from
 	 * @param {string[]} aryList - array of attributes to try to find
-	 * @param {string | number} startFnd - if unable to get attribute from line, then the offset in data to start at
+	 * @param {number} startFnd - if unable to get attribute from line, then the offset in data to start at
 	 * @param {string[]} termChars - array of possible attribute termination characters
 	 * @param {string} charId - the character ID to add the attribute(s) to.
 	 */
@@ -3678,14 +3625,14 @@ var CreatureGenPF = (function() {
 
   /**
    * creLogDump - dumps the log to the Roll20 log
-   * @param {number} [lvl] - the level to send to roll 20's log
+   * @param {string} [lvl] - the level to send to roll 20's log
    */
   var creLogDump = function(lvl) {
     if (dmesg) {
       log("--- Dumping log at level [" + lvl + "] ---");
       _.every(dmesg, function(line) {
         var clvl = line.match(/\d+/);
-        if (clvl && parseInt(clvl[0].trim()) <= lvl) {
+        if (clvl && parseInt(clvl[0].trim()) <= parseInt(lvl)) {
           log(line);
         }
         return true;
@@ -3729,7 +3676,7 @@ var CreatureGenPF = (function() {
 
   /**
    * getWarningBlock - get warning block
-   * @param {string} msg  - the message to build an html block for
+   * @param {string} [msg]  - the message to build an html block for
    * @returns {string} the formatted html for the message.
    */
   var getWarningBlock = function(msg) {
@@ -4010,14 +3957,8 @@ var CreatureGenPF = (function() {
           if ((token && token.get("_subtype") !== "token") || !token) {
             sendFeedback(
               '<span style="font-weight: bold; color: #FF0000;">Invalid Selection</span>' +
-                (msg.selected.length > 1
-                  ? '<div style="color: black; font-style: italic; font-weight: bold;">(' +
-                    (msg.selected.length - workList.length + 1) +
-                    "/" +
-                    msg.selected.length +
-                    ")</div>"
-                  : "")
-            );
+              (msg.selected.length > 1 ? '<div style="color: black; font-style: italic; font-weight: bold;">(' + (msg.selected.length - workList.length + 1) + "/" + msg.selected.length + ")</div>"
+                : ""));
             return;
           }
           try {
@@ -4025,21 +3966,10 @@ var CreatureGenPF = (function() {
             warn = undefined;
             scan(token);
             sendFeedback(
-              (warn ? getWarningBlock() : "") +
-                '<span style="font-weight: bold; color: ' +
-                (warn ? "#FF9100" : "#08AF12") +
-                ';">' +
-                token.get("name") +
-                "</span>" +
-                " has been generated " +
-                (warn ? "with warnings." : "successfully!") +
-                (msg.selected.length > 1
-                  ? '<div style="color: black; font-style: italic; font-weight: bold;">(' +
-                    (msg.selected.length - workList.length + 1) +
-                    "/" +
-                    msg.selected.length +
-                    ")</div>"
-                  : ""),
+              (warn ? getWarningBlock() : "") + '<span style="font-weight: bold; color: ' +
+              (warn ? "#FF9100" : "#08AF12") + ';">' + token.get("name") + "</span> has been generated " +
+              (warn ? "with warnings." : "successfully!") +
+              (msg.selected.length > 1 ? '<div style="color: black; font-style: italic; font-weight: bold;">(' + (msg.selected.length - workList.length + 1) + "/" + msg.selected.length + ")</div>" : ""),
               warn ? design.warningImg : design.successImg,
               token.get("imgsrc")
             );
@@ -4052,20 +3982,14 @@ var CreatureGenPF = (function() {
             log("GENESIS ERROR: " + err);
             sendFeedback(
               (warn ? getWarningBlock() : "") +
-                '<span style="font-weight: bold; color: #FF0000;">' +
-                "There was an error during token generation." +
-                "</span> " +
-                "Please see the log for details, and delete the erroneous journal entry." +
-                (msg.selected.length > 1
-                  ? '<div style="color: black; font-style: italic; font-weight: bold;">(' +
-                    (msg.selected.length - workList.length + 1) +
-                    "/" +
-                    msg.selected.length +
-                    ")</div>"
-                  : ""),
+              '<span style="font-weight: bold; color: #FF0000;">' +
+              "There was an error during token generation." +
+              "</span> " +
+              "Please see the log for details, and delete the erroneous journal entry." +
+              (msg.selected.length > 1 ? '<div style="color: black; font-style: italic; font-weight: bold;">(' + (msg.selected.length - workList.length + 1) + "/" + msg.selected.length + ")</div>"
+                : ""),
               design.errorImg,
-              token.get("imgsrc")
-            );
+              token.get("imgsrc"));
             creLogDump(debugLvl);
             warn = undefined;
             character = undefined;
@@ -4108,7 +4032,7 @@ var CreatureGenPF = (function() {
   /**
    * Delayed Worktask
    */
-  var doDelayedWork = function() {
+  var doDelayedWork = function(workList) {
     if (!workList || !workList.length) {
       return;
     }
@@ -4198,9 +4122,7 @@ var CreatureGenPF = (function() {
       '<li style="padding-left: 10px;">' +
       "Set design template" +
       "</li>" +
-      (designTmpList === ""
-        ? ""
-        : '<div style="border: 1px solid blue; text-align: center;"><span style="text-decoration: underline;">Available design templates:</span>') +
+      (designTmpList === "" ? "" : '<div style="border: 1px solid blue; text-align: center;"><span style="text-decoration: underline;">Available design templates:</span>') +
       designTmpList +
       (designTmpList === "" ? "" : "</div>") +
       "<div>" +
@@ -4212,9 +4134,7 @@ var CreatureGenPF = (function() {
       '<li style="padding-left: 10px;">' +
       "Set attack template" +
       "</li>" +
-      (attackTmpList === ""
-        ? ""
-        : '<div style="border: 1px solid blue; text-align: center;"><span style="text-decoration: underline;">Available attack templates:</span>') +
+      (attackTmpList === "" ? "" : '<div style="border: 1px solid blue; text-align: center;"><span style="text-decoration: underline;">Available attack templates:</span>') +
       attackTmpList +
       (attackTmpList === "" ? "" : "</div>") +
       "<div>" +
@@ -4261,7 +4181,7 @@ var CreatureGenPF = (function() {
         } else if (args.indexOf("-help") === 0) {
           showHelp();
         } else if (args.indexOf("-dmesg") === 0) {
-          var level = 0;
+          var level = '0';
           args = args.replace("-dmesg", "").trim();
           level = getBonusNumber(args, bonusEnum.SCALAR);
           creLogDump(level);
