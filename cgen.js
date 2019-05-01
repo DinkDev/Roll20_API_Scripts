@@ -321,6 +321,9 @@ var CreatureGenPF = (function() {
     )
   };
 
+  // declare CGTmp
+  var CGTmp = {};
+
   /**
    * selectDesignTemplate - searches CGTmp.designTmp for template named name.
    * sets design to that template and
@@ -1270,7 +1273,7 @@ var CreatureGenPF = (function() {
             return true;
           }
           creLog(skill, 4);
-          if ((parts = skill.match(/\b[^\d\+\-/]+/)) !== -1) {
+          if ((parts = skill.match(/\b[^\d\+\-/]+/)) !== null) {
             skillName = parts[0].trim();
             creLog("parseSkills: skillName: " + skillName, 5);
             skillRiders = skill
@@ -1783,7 +1786,7 @@ var CreatureGenPF = (function() {
   /**
    * Parse out special abilities (not special attacks) and put them in a
    * menu, if there are no special abilities, create no such menu
-   * @param {*} specials - data returned by parseSpecials
+   * @param {any} specials - data returned by parseSpecials
    */
   var parseSpecialMenu = function(specials) {
     if (!specials) {
@@ -1814,7 +1817,8 @@ var CreatureGenPF = (function() {
       }) +
       "</div>";
 
-    _.every(_.keys(specials), function(key) {
+       // @ts-ignore
+       _.every(_.keys(specials), function(key) {
       saName = "SA-" + key;
       if (characterObjExists(saName, "ability", charId)) {
         hasSpecials = true;
@@ -4076,7 +4080,7 @@ var CreatureGenPF = (function() {
           return true;
         });
       } catch (ex) {
-        log("ERROR accessing CGTmp: " + e);
+        log("ERROR accessing CGTmp: " + ex);
         designTmpList = "";
         attackTmpList = "";
       }
